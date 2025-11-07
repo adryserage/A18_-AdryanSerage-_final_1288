@@ -1,0 +1,16 @@
+*/settings.local.json
+
+# java compiled files
+*.class
+
+# artifacts
+artifacts/
+
+# ide
+.vscode/
+.idea/
+*.iml
+
+# os files
+.DS_Store
+Thumbs.db
