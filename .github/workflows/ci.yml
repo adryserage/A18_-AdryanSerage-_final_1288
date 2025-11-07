@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - name: récupération du code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: configuration jdk 8
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '8'
         distribution: 'temurin'
@@ -66,7 +66,7 @@ jobs:
         echo "dépôt: $GITHUB_REPOSITORY" >> artifacts/${ARTIFACT_NAME}_report.txt
 
     - name: téléversement des artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: A18_AdryanSerage_final_1288_build_${{ github.run_number }}
         path: artifacts/
@@ -79,7 +79,7 @@ jobs:
 
     - name: téléversement marqueur de succès
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: A18_AdryanSerage_final_1288_success_marker
         path: artifacts/A18_AdryanSerage_final_1288_success.txt
