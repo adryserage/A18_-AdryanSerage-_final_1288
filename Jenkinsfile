@@ -75,44 +75,40 @@ pipeline {
             steps {
                 echo 'création de la release github...'
                 withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                    sh """
-                        # configurer gh avec le token
-                        echo \$GH_TOKEN | gh auth login --with-token
+                    sh '''
+                        export GH_TOKEN="${GH_TOKEN}"
 
-                        # créer le tag et la release
-                        TAG_NAME="${ARTIFACT_NAME}_build_${BUILD_NUMBER}"
-                        RELEASE_TITLE="release ${ARTIFACT_NAME} - build ${BUILD_NUMBER}"
+                        TAG_NAME="A18_AdryanSerage_final_1288_build_${BUILD_NUMBER}"
+                        RELEASE_TITLE="release A18_AdryanSerage_final_1288 - build ${BUILD_NUMBER}"
 
-                        cat > release_notes.md << 'NOTES'
-## build jenkins #${BUILD_NUMBER}
+                        echo "création du tag et de la release: ${TAG_NAME}"
+
+                        gh release create "${TAG_NAME}" \
+                            --repo adryserage/A18_-AdryanSerage-_final_1288 \
+                            --title "${RELEASE_TITLE}" \
+                            --notes "## build jenkins #${BUILD_NUMBER}
 
 **artifacts générés:**
-- ${ARTIFACT_NAME}.java - code source java
-- ${ARTIFACT_NAME}.class - bytecode compilé
-- ${ARTIFACT_NAME}.Dockerfile - configuration docker
-- ${ARTIFACT_NAME}_image.tar - image docker complète
-- ${ARTIFACT_NAME}_report.txt - rapport de build
-- ${ARTIFACT_NAME}_success.txt - marqueur de succès
+- A18_AdryanSerage_final_1288.java - code source java
+- A18_AdryanSerage_final_1288.class - bytecode compilé
+- A18_AdryanSerage_final_1288.Dockerfile - configuration docker
+- A18_AdryanSerage_final_1288_image.tar - image docker complète
+- A18_AdryanSerage_final_1288_report.txt - rapport de build
+- A18_AdryanSerage_final_1288_success.txt - marqueur de succès
 
-**image docker:** ${DOCKER_IMAGE}
-**commit:** \$(git rev-parse HEAD)
+**image docker:** a18_adryanserrage_final_1288:${BUILD_NUMBER}
+**commit:** $(git rev-parse HEAD)
 
-build réussi avec succès via jenkins.
-NOTES
+build réussi avec succès via jenkins." \
+                            artifacts/A18_AdryanSerage_final_1288.java \
+                            artifacts/A18_AdryanSerage_final_1288.class \
+                            artifacts/A18_AdryanSerage_final_1288.Dockerfile \
+                            artifacts/A18_AdryanSerage_final_1288_image.tar \
+                            artifacts/A18_AdryanSerage_final_1288_report.txt \
+                            artifacts/A18_AdryanSerage_final_1288_success.txt
 
-                        # créer la release avec les artifacts
-                        gh release create "\$TAG_NAME" \
-                            --title "\$RELEASE_TITLE" \
-                            --notes-file release_notes.md \
-                            artifacts/${ARTIFACT_NAME}.java \
-                            artifacts/${ARTIFACT_NAME}.class \
-                            artifacts/${ARTIFACT_NAME}.Dockerfile \
-                            artifacts/${ARTIFACT_NAME}_image.tar \
-                            artifacts/${ARTIFACT_NAME}_report.txt \
-                            artifacts/${ARTIFACT_NAME}_success.txt
-
-                        echo "release github créée: \$TAG_NAME"
-                    """
+                        echo "release github créée avec succès: ${TAG_NAME}"
+                    '''
                 }
             }
         }
