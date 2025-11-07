@@ -94,7 +94,6 @@ pipeline {
 - A18_AdryanSerage_final_1288.Dockerfile - configuration docker
 - A18_AdryanSerage_final_1288_image.tar - image docker complète
 - A18_AdryanSerage_final_1288_report.txt - rapport de build
-- A18_AdryanSerage_final_1288_success.txt - marqueur de succès
 
 **image docker:** a18_adryanserrage_final_1288:${BUILD_NUMBER}
 **commit:** $(git rev-parse HEAD)
@@ -104,8 +103,7 @@ build réussi avec succès via jenkins." \
                             artifacts/A18_AdryanSerage_final_1288.class \
                             artifacts/A18_AdryanSerage_final_1288.Dockerfile \
                             artifacts/A18_AdryanSerage_final_1288_image.tar \
-                            artifacts/A18_AdryanSerage_final_1288_report.txt \
-                            artifacts/A18_AdryanSerage_final_1288_success.txt
+                            artifacts/A18_AdryanSerage_final_1288_report.txt
 
                         echo "release github créée avec succès: ${TAG_NAME}"
                     '''
