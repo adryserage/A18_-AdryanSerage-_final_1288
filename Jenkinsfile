@@ -70,46 +70,6 @@ pipeline {
                 archiveArtifacts artifacts: "artifacts/${ARTIFACT_NAME}_report.txt"
             }
         }
-
-        stage('création release github') {
-            steps {
-                echo 'création de la release github...'
-                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
-                    sh '''
-                        export GH_TOKEN="${GH_TOKEN}"
-
-                        TAG_NAME="A18_AdryanSerage_final_1288_build_${BUILD_NUMBER}"
-                        RELEASE_TITLE="release A18_AdryanSerage_final_1288 - build ${BUILD_NUMBER}"
-
-                        echo "création du tag et de la release: ${TAG_NAME}"
-
-                        gh release create "${TAG_NAME}" \
-                            --repo adryserage/A18_-AdryanSerage-_final_1288 \
-                            --title "${RELEASE_TITLE}" \
-                            --notes "## build jenkins #${BUILD_NUMBER}
-
-**artifacts générés:**
-- A18_AdryanSerage_final_1288.java - code source java
-- A18_AdryanSerage_final_1288.class - bytecode compilé
-- A18_AdryanSerage_final_1288.Dockerfile - configuration docker
-- A18_AdryanSerage_final_1288_image.tar - image docker complète
-- A18_AdryanSerage_final_1288_report.txt - rapport de build
-
-**image docker:** a18_adryanserrage_final_1288:${BUILD_NUMBER}
-**commit:** $(git rev-parse HEAD)
-
-build réussi avec succès via jenkins." \
-                            artifacts/A18_AdryanSerage_final_1288.java \
-                            artifacts/A18_AdryanSerage_final_1288.class \
-                            artifacts/A18_AdryanSerage_final_1288.Dockerfile \
-                            artifacts/A18_AdryanSerage_final_1288_image.tar \
-                            artifacts/A18_AdryanSerage_final_1288_report.txt
-
-                        echo "release github créée avec succès: ${TAG_NAME}"
-                    '''
-                }
-            }
-        }
     }
 
     post {

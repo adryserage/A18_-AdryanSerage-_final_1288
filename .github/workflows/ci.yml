@@ -127,3 +127,68 @@ jobs:
           artifacts/${ARTIFACT_NAME}_success.txt
 
         echo "release github créée: $TAG_NAME"
+
+  verify-jenkins:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push'
+
+    steps:
+    - name: attente démarrage build jenkins
+      run: |
+        echo "attente de 30 secondes pour que jenkins démarre le build..."
+        sleep 30
+
+    - name: vérification statut jenkins
+      env:
+        JENKINS_URL: ${{ secrets.JENKINS_URL }}
+        JENKINS_USER: ${{ secrets.JENKINS_USER }}
+        JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+      run: |
+        if [ -z "$JENKINS_URL" ]; then
+          echo "⚠️ JENKINS_URL non configuré - skip de la vérification jenkins"
+          echo "pour activer: ajouter JENKINS_URL, JENKINS_USER, JENKINS_TOKEN dans les secrets github"
+          exit 0
+        fi
+
+        echo "vérification du statut du dernier build jenkins..."
+
+        # récupérer le statut du dernier build
+        RESPONSE=$(curl -s -u "${JENKINS_USER}:${JENKINS_TOKEN}" \
+          "${JENKINS_URL}/job/A18_AdryanSerage_final_1288/lastBuild/api/json")
+
+        BUILD_NUMBER=$(echo $RESPONSE | jq -r '.number')
+        BUILD_RESULT=$(echo $RESPONSE | jq -r '.result')
+        BUILD_URL=$(echo $RESPONSE | jq -r '.url')
+
+        echo "build jenkins #${BUILD_NUMBER}"
+        echo "résultat: ${BUILD_RESULT}"
+        echo "url: ${BUILD_URL}"
+
+        if [ "$BUILD_RESULT" = "SUCCESS" ]; then
+          echo "✅ build jenkins réussi"
+          exit 0
+        elif [ "$BUILD_RESULT" = "null" ]; then
+          echo "⏳ build jenkins en cours d'exécution..."
+          echo "attente de 60 secondes supplémentaires..."
+          sleep 60
+
+          # deuxième vérification
+          RESPONSE=$(curl -s -u "${JENKINS_USER}:${JENKINS_TOKEN}" \
+            "${JENKINS_URL}/job/A18_AdryanSerage_final_1288/lastBuild/api/json")
+          BUILD_RESULT=$(echo $RESPONSE | jq -r '.result')
+
+          if [ "$BUILD_RESULT" = "SUCCESS" ]; then
+            echo "✅ build jenkins réussi"
+            exit 0
+          elif [ "$BUILD_RESULT" = "null" ]; then
+            echo "⚠️ build jenkins toujours en cours - vérifier manuellement"
+            exit 0
+          else
+            echo "❌ build jenkins a échoué: ${BUILD_RESULT}"
+            exit 1
+          fi
+        else
+          echo "❌ build jenkins a échoué: ${BUILD_RESULT}"
+          exit 1
+        fi
