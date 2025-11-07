@@ -1,0 +1,86 @@
+name: ci pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+env:
+  ARTIFACT_NAME: A18_AdryanSerage_final_1288
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: récupération du code
+      uses: actions/checkout@v3
+
+    - name: configuration jdk 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+
+    - name: compilation application java
+      run: |
+        javac DockerDemo.java
+        echo "compilation terminée"
+
+    - name: exécution application java
+      run: |
+        java DockerDemo
+
+    - name: configuration docker buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: construction image docker
+      run: |
+        docker build -t $ARTIFACT_NAME:$GITHUB_RUN_NUMBER .
+        docker build -t $ARTIFACT_NAME:latest .
+        echo "image docker construite avec succès"
+
+    - name: test image docker
+      run: |
+        docker run --rm $ARTIFACT_NAME:$GITHUB_RUN_NUMBER
+
+    - name: préparation des artifacts
+      run: |
+        mkdir -p artifacts
+        cp DockerDemo.java artifacts/${ARTIFACT_NAME}.java
+        cp DockerDemo.class artifacts/${ARTIFACT_NAME}.class
+        cp Dockerfile artifacts/${ARTIFACT_NAME}.Dockerfile
+        docker save $ARTIFACT_NAME:$GITHUB_RUN_NUMBER -o artifacts/${ARTIFACT_NAME}_image.tar
+
+    - name: génération rapport de build
+      run: |
+        echo "=== rapport de build ===" > artifacts/${ARTIFACT_NAME}_report.txt
+        echo "numéro d'exécution: $GITHUB_RUN_NUMBER" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "date de build: $(date)" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "image docker: $ARTIFACT_NAME:$GITHUB_RUN_NUMBER" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "commit git: $GITHUB_SHA" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "branche git: $GITHUB_REF_NAME" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "déclenché par: $GITHUB_ACTOR" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "dépôt: $GITHUB_REPOSITORY" >> artifacts/${ARTIFACT_NAME}_report.txt
+
+    - name: téléversement des artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: A18_AdryanSerage_final_1288_build_${{ github.run_number }}
+        path: artifacts/
+        retention-days: 30
+
+    - name: création marqueur de succès
+      if: success()
+      run: |
+        echo "build $GITHUB_RUN_NUMBER réussi le $(date)" > artifacts/${ARTIFACT_NAME}_success.txt
+
+    - name: téléversement marqueur de succès
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: A18_AdryanSerage_final_1288_success_marker
+        path: artifacts/A18_AdryanSerage_final_1288_success.txt
+        retention-days: 30
