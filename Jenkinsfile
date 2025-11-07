@@ -76,23 +76,15 @@ pipeline {
                 echo 'création de la release github...'
                 withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
                     sh """
-                        # installer gh cli si nécessaire
-                        if ! command -v gh &> /dev/null; then
-                            echo "installation de gh cli..."
-                            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-                            chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-                            echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-                            apt update
-                            apt install -y gh
-                        fi
-
                         # configurer gh avec le token
                         echo \$GH_TOKEN | gh auth login --with-token
 
                         # créer le tag et la release
                         TAG_NAME="${ARTIFACT_NAME}_build_${BUILD_NUMBER}"
-                        RELEASE_TITLE="Release ${ARTIFACT_NAME} - Build ${BUILD_NUMBER}"
-                        RELEASE_NOTES="## build jenkins #${BUILD_NUMBER}
+                        RELEASE_TITLE="release ${ARTIFACT_NAME} - build ${BUILD_NUMBER}"
+
+                        cat > release_notes.md << 'NOTES'
+## build jenkins #${BUILD_NUMBER}
 
 **artifacts générés:**
 - ${ARTIFACT_NAME}.java - code source java
@@ -103,15 +95,15 @@ pipeline {
 - ${ARTIFACT_NAME}_success.txt - marqueur de succès
 
 **image docker:** ${DOCKER_IMAGE}
-**date:** \$(date)
 **commit:** \$(git rev-parse HEAD)
 
-build réussi avec succès via jenkins."
+build réussi avec succès via jenkins.
+NOTES
 
                         # créer la release avec les artifacts
                         gh release create "\$TAG_NAME" \
                             --title "\$RELEASE_TITLE" \
-                            --notes "\$RELEASE_NOTES" \
+                            --notes-file release_notes.md \
                             artifacts/${ARTIFACT_NAME}.java \
                             artifacts/${ARTIFACT_NAME}.class \
                             artifacts/${ARTIFACT_NAME}.Dockerfile \
@@ -119,7 +111,7 @@ build réussi avec succès via jenkins."
                             artifacts/${ARTIFACT_NAME}_report.txt \
                             artifacts/${ARTIFACT_NAME}_success.txt
 
-                        echo "✅ release github créée: \$TAG_NAME"
+                        echo "release github créée: \$TAG_NAME"
                     """
                 }
             }
