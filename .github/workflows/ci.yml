@@ -9,6 +9,7 @@ on:
 
 env:
   ARTIFACT_NAME: A18_AdryanSerage_final_1288
+  DOCKER_IMAGE_NAME: a18_adryanserrage_final_1288
 
 jobs:
   build:
@@ -38,13 +39,13 @@ jobs:
 
     - name: construction image docker
       run: |
-        docker build -t $ARTIFACT_NAME:$GITHUB_RUN_NUMBER .
-        docker build -t $ARTIFACT_NAME:latest .
+        docker build -t $DOCKER_IMAGE_NAME:$GITHUB_RUN_NUMBER .
+        docker build -t $DOCKER_IMAGE_NAME:latest .
         echo "image docker construite avec succès"
 
     - name: test image docker
       run: |
-        docker run --rm $ARTIFACT_NAME:$GITHUB_RUN_NUMBER
+        docker run --rm $DOCKER_IMAGE_NAME:$GITHUB_RUN_NUMBER
 
     - name: préparation des artifacts
       run: |
@@ -52,14 +53,14 @@ jobs:
         cp DockerDemo.java artifacts/${ARTIFACT_NAME}.java
         cp DockerDemo.class artifacts/${ARTIFACT_NAME}.class
         cp Dockerfile artifacts/${ARTIFACT_NAME}.Dockerfile
-        docker save $ARTIFACT_NAME:$GITHUB_RUN_NUMBER -o artifacts/${ARTIFACT_NAME}_image.tar
+        docker save $DOCKER_IMAGE_NAME:$GITHUB_RUN_NUMBER -o artifacts/${ARTIFACT_NAME}_image.tar
 
     - name: génération rapport de build
       run: |
         echo "=== rapport de build ===" > artifacts/${ARTIFACT_NAME}_report.txt
         echo "numéro d'exécution: $GITHUB_RUN_NUMBER" >> artifacts/${ARTIFACT_NAME}_report.txt
         echo "date de build: $(date)" >> artifacts/${ARTIFACT_NAME}_report.txt
-        echo "image docker: $ARTIFACT_NAME:$GITHUB_RUN_NUMBER" >> artifacts/${ARTIFACT_NAME}_report.txt
+        echo "image docker: $DOCKER_IMAGE_NAME:$GITHUB_RUN_NUMBER" >> artifacts/${ARTIFACT_NAME}_report.txt
         echo "commit git: $GITHUB_SHA" >> artifacts/${ARTIFACT_NAME}_report.txt
         echo "branche git: $GITHUB_REF_NAME" >> artifacts/${ARTIFACT_NAME}_report.txt
         echo "déclenché par: $GITHUB_ACTOR" >> artifacts/${ARTIFACT_NAME}_report.txt
