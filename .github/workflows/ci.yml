@@ -85,3 +85,39 @@ jobs:
         name: A18_AdryanSerage_final_1288_success_marker
         path: artifacts/A18_AdryanSerage_final_1288_success.txt
         retention-days: 30
+
+    - name: création release github
+      if: success() && github.event_name == 'push'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        TAG_NAME="${ARTIFACT_NAME}_github_run_${{ github.run_number }}"
+        RELEASE_TITLE="release ${ARTIFACT_NAME} - github run ${{ github.run_number }}"
+
+        gh release create "$TAG_NAME" \
+          --title "$RELEASE_TITLE" \
+          --notes "## github actions run #${{ github.run_number }}
+
+**artifacts générés:**
+- ${ARTIFACT_NAME}.java - code source java
+- ${ARTIFACT_NAME}.class - bytecode compilé
+- ${ARTIFACT_NAME}.Dockerfile - configuration docker
+- ${ARTIFACT_NAME}_image.tar - image docker complète
+- ${ARTIFACT_NAME}_report.txt - rapport de build
+- ${ARTIFACT_NAME}_success.txt - marqueur de succès
+
+**image docker:** ${DOCKER_IMAGE_NAME}:${{ github.run_number }}
+**date:** $(date)
+**commit:** ${{ github.sha }}
+**branche:** ${{ github.ref_name }}
+**déclenché par:** ${{ github.actor }}
+
+build réussi avec succès via github actions." \
+          artifacts/${ARTIFACT_NAME}.java \
+          artifacts/${ARTIFACT_NAME}.class \
+          artifacts/${ARTIFACT_NAME}.Dockerfile \
+          artifacts/${ARTIFACT_NAME}_image.tar \
+          artifacts/${ARTIFACT_NAME}_report.txt \
+          artifacts/${ARTIFACT_NAME}_success.txt
+
+        echo "✅ release github créée: $TAG_NAME"
